@@ -1,0 +1,106 @@
+configure syslog server & mysql & webserver
+
+
+# yum install httpd
+# service httpd start
+# chkconfig httpd on
+# yum install mysql mysql-server
+# service mysqld start 
+# chkconfig mysql on 
+# mysqladmin -u root password '123456' 
+# mysql -u root -p 
+
+welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 9
+Server version: 5.1.73 Source distribution
+
+Copyright (c) 2000, 2013, Oracle and/or its affiliates. All rights
+reserved.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input
+statement.
+
+mysql>
+
+Type 'exit' to log out:
+
+mysql> exit
+
+# yum install php php-mysql
+# vi /var/www/html/test.php
+
+<?php 
+    phpinfo(); 
+?>
+
+# service httpd restart
+
+# yum install rsyslog*
+# service rsyslog start 
+# chkconfig rsyslog on
+Rename the Rsyslog database:
+# vi /usr/share/doc/rsyslog-mysql-5.8.10/createDB.sql
+From Syslog to rsyslogdb
+CREATE DATABASE rsyslogdb; 
+USE rsyslogdb; 
+CREATE TABLE SystemEvents ( 
+[...]
+# mysql -u root -p < /usr/share/doc/rsyslog-mysql-5.8.10/createDB.sql
+
+# mysql -u root -p rsyslogdb
+
+mysql> GRANT ALL ON rsyslogdb.* TO rsysloguser@localhost IDENTIFIED BY 'changeMe';
+ 
+mysql> FLUSH PRIVILEGES;
+
+mysql> exit
+
+# mysql -u rsysloguser -p rsyslogdb
+
+# vi /etc/rsyslog.conf
+$ModLoad imudp 
+$UDPServerRun 514 
+
+# Provides TCP syslog reception 
+$ModLoad imtcp 
+$InputTCPServerRun 514 
+$ModLoad ommysql
+*.* :ommysql:127.0.0.1,rsyslogdb,rsysloguser,changeMe
+127.0.0.1 - mysql server address
+rsyslogdb - mysql rsyslog database name
+rsysloguser - mysql rsyslog database user username
+changeMe - mysql rsyslog database user password
+
+Save and exit.
+
+# service rsyslog restart
+
+# mysql -u root -p rsyslogdb
+
+mysql> select count(*) from SystemEvents;
++----------+
+| count(*) |
++----------+
+|        2 |
++----------+
+
+To send a test message to the log:
+# echo '<14>ip_address_here tag_here message here' | nc -v -u -w 0 127.0.0.1 514
+ 
+ [root@localhost ]# wget http://download.adiscon.com/loganalyzer/loganalyzer-3.6.5.tar.gz
+
+Unpack the tarball:
+# tar zxvf loganalyzer-3.6.5.tar.gz
+# cp -r loganalyzer-3.6.5/src/ /var/www/html/loganalyzer
+# cp -r loganalyzer-3.6.5/contrib/* /var/www/html/loganalyzer/
+# cd /var/www/html/loganalyzer/
+# chmod +x configure.sh secure.sh
+
+Now run ./configure.sh. This will create a blank config.php, and will also set write access to everyone to it.
+# ./configure.sh
+
+To complete the installation open http://localhost/loganalyzer  and next next next…finish
+
