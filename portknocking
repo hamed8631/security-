@@ -1,1 +1,31 @@
+Install port knocking
+#yum install libpcap*
+# wget http://li.nux.ro/download/nux/misc/el6/i386/knock-server-0.5-7.el6.nux.i686.rpm
+# rpm -ivh knock-server-0.5-7.el6.nux.i686.rpm
+
+# iptables -A INPUT -p tcp --dport 22 -j DROP
+# service iptables save
+
+# vi /etc/knockd.conf
+	
+	[options]
+        logfile = /var/log/knockd.log
+
+[openSSH]
+        sequence = 71:udp,82:udp,93:udp,104:tcp
+        seq_timeout = 60
+        tcpflags = syn
+        Start_command = /sbin/iptables -I INPUT -s %IP% -p tcp --dport 22 -j ACCEPT
+
+[closeSSH]
+        sequence = 22:tcp,22tcp
+        seq_timeout = 86400
+        command = /sbin/iptables -D INPUT -s %IP% -p tcp --dport 22 -j ACCEPT
+        tcpflags = syn
+
+
+
+
+	View log
+#tail –f /var/log/knockd.log
 
