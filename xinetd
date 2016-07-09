@@ -1,1 +1,49 @@
+کنترل سرویس ها تحت شبکه  به کمک سرویس xinetd
+
+Xinetd = eXtended INTErner Deamon
+
+
+install xinetd
+#yum install xinetd
+	Config file
+# vi /etc/xinetd.conf			//The global xinetd configuration file.
+
+Defaults		//name
+{
+	log_type	= SYSLOG daemon info 		//save path log
+	log_on_failure	= HOST				//save host
+	log_on_success	= PID HOST DURATION EXIT	//save host & PID
+
+	cps		= 50 10		//50 connection per 10 second per service
+	instances	= 50		//maximum request per service
+	per_source	= 10
+	v6only		= no
+
+	groups		= yes
+	umask		= 002
+}
+
+includedir /etc/xinetd.d		//The directory containing all service-specific files
+ 
+
+
+
+
+	Config service file
+# vi /etc/xinetd.d/sshd				//The directory containing all service-specific files
+service ssh
+{
+        disable = no
+        socket_type     = stream
+        wait            = no
+        user            = root
+    	    server          = /usr/sbin/sshd
+   	     server_args     = -i
+  	      log_on_failure  += USERID
+ 	      log_on_success  += PID HOST EXIT
+		only_from = 192.168.177.1
+  	      no_access = 192.168.1.11/32
+	per_source = 2
+  	      access_times    = 01:41-16:15
+}
 
