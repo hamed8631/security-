@@ -1,1 +1,17 @@
+Block bruteforce attack to sshd
+write white list ip address
+#vi /etc/allow.hosts
+sshd: 192.168.52.23
+sshd: 188.252.25.23
+sshd: 10.12.101.12
+1-	Install deny host centos 6.6
+#yum install denyhosts
+OR
+#rpm –ivh http://pkgs.repoforge.org/denyhosts/denyhosts-2.6-5.el6.rf.noarch.rpm
+
+2-	وارد فایل کانفیگ میشویم و در قسمت Admin_Email ، ایمیل خورمان را وارد میکنیم و threshold  های مورد نظر جهت لاگین های اشتباهی را مشخص میکنیم
+vi /etc/denyhosts/denyhosts.cfg
+3-	سرویس denyhosts را restart میکنیم
+#service denyhosts restart
+4-	به صورت default بعد از 5 بار لاگین ناموفق IP Attacker بلاک میشود و درون فایل /etc/hosts.deny قرار میگیرد ، چنانچه بخواهیم یک IP را از حالت Block در بیاوریم میبایستی وارد فایل /etc/hosts.deny بشویم و ان IP را از داخل این فایل حذف کنیم و سپس سرویس denyhosts را با دستور service denyhosts restart ری استارت کنیم
 
