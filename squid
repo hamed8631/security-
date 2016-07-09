@@ -1,1 +1,193 @@
+#vi /etc/sysctl.conf				//enable IP Forward
+	net.ipv4.ip_forward = 1	
+or
+# sysctl -w net.ipv4.ip.forward=1
+# echo 1 > /proc/sys/net/ipv4/ip/forward
+
+
+
+# route add default gw 192.168.1.1 eth0
+
+
+#service netwok restart
+
+
+#iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+#iptables --table nat --append POSTROUTING --out-interface eth0 -j MASQUERADE
+# iptables --append FORWARD --in-interface eth1 -j ACCEPT
+# iptables -t nat -A POSTROUTING ! -d 192.168.0.0/16 -o eth1 -j MASQUERADE
+# iptables -t nat -A POSTROUTING ! -d 192.168.0.0/16 -o eth1 -j SNAT --to-source 1.2.3.4
+
+ “”””
+-A PREROUTING -i eth1 -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 3128
+-A PREROUTING -i eth1 -p tcp -m tcp --dport 443 -j REDIRECT --to-ports 3129
+-A POSTROUTING -o eth0 -j MASQUERADE
+“”””
+iptables  -t nat  -A PREROUTING  -p tcp  --dport 80  -j DNAT  --to-destination 192.0.2.25:3128   // shalk daram
+#yum install squid
+#vi /etc/squid/squid.conf
+acl localnet src 10.0.0.0/8	# RFC1918 possible internal network
+acl localnet src 172.16.0.0/12	# RFC1918 possible internal network
+acl localnet src 192.168.0.0/16	# RFC1918 possible internal network
+acl localnet src fc00::/7       # RFC 4193 local private network range
+acl localnet src fe80::/10      # RFC 4291 link-local (directly plugged) machines
+
+acl SSL_ports port 443
+acl Safe_ports port 80		# http			//built in acl
+acl Safe_ports port 21		# ftp			//built in acl
+acl Safe_ports port 443		# https			//built in acl
+acl Safe_ports port 70		# gopher		//built in acl
+acl Safe_ports port 210		# wais			//built in acl
+acl Safe_ports port 1025-65535	# unregistered ports	//built in acl
+acl Safe_ports port 280		# http-mgmt		//built in acl
+acl Safe_ports port 488		# gss-http		//built in acl
+acl Safe_ports port 591		# filemaker		//built in acl
+acl Safe_ports port 777		# multiling http	//built in acl
+acl CONNECT method CONNECT				//built in acl tunneling
+
+#
+# Recommended minimum Access Permission configuration:
+#
+# Only allow cachemgr access from localhost
+http_access allow manager localhost
+http_access deny manager
+
+# Deny requests to certain unsafe ports
+http_access deny !Safe_ports			//built in acl 
+
+# Deny CONNECT to other than secure SSL ports
+http_access deny CONNECT !SSL_ports		//built in acl
+
+# We strongly recommend the following be uncommented to protect innocent
+# web applications running on the proxy server who think the only
+# one who can access services on "localhost" is a local user
+#http_access deny to_localhost
+
+#
+# INSERT YOUR OWN RULE(S) HERE TO ALLOW ACCESS FROM YOUR CLIENTS
+#
+
+# Example rule allowing access from your local networks.
+# Adapt localnet in the ACL section to list your (internal) IP networks
+# from where browsing should be allowed
+http_access allow localnet
+http_access allow localhost
+
+# And finally deny all other access to this proxy
+http_access deny all
+
+# Squid normally listens to port 3128 transparent
+http_port 3128
+
+# We recommend you to use at least the following line.
+hierarchy_stoplist cgi-bin ?
+
+# Uncomment and adjust the following to add a disk cache directory.
+#cache_dir ufs /var/spool/squid 100 16 256
+
+# Leave coredumps in the first cache dir
+coredump_dir /var/spool/squid
+
+# Add any of your own refresh_pattern entries above these.
+refresh_pattern ^ftp:		1440	20%	10080
+refresh_pattern ^gopher:	1440	0%	1440
+refresh_pattern -i (/cgi-bin/|\?) 0	0%	0
+refresh_pattern .		0	20%	4320
+
+
+visible_hostname localhost.localdomain
+
+acl kasra dstdomain kasra.imcso.net
+http_reply_access deny kasra
+
+acl clients src 192.0.2.0/25			//select ip range to src
+acl website dst 198.51.100.86		//select one ip to dst
+acl all_range src 10.1.2.0/24 10.1.3.0/24 10.1.4.0/24 10.1.5.0/24 10.1.6.0/24		//select all range
+acl localip myip 198.51.100.25		//ip squid
+acl localip myip 192.0.2.25			//ip squid
+acl mac_acl arp 00:1D:7D:D4:F3:EE		//when compile --enable-eui & -- enable-arp-acl
+acl example dstdomain www.example.com		//select web site only example.com and sub directory “www.example.com/index/...
+acl example dstdomain.example.com		//select web site , all directory “video.example.com ,… “
+acl bad_sites dstdom_regex -i evil			//content http header filtering
+acl bad_sites srcdom_regex -i evil			//content http header filtering
+http_access deny bad_sites			//block all header  include evil
+acl allowed_port port 80				//select port
+acl allowed_ports port 80 443 1025-65535	//select range port
+
+acl ftp_requests proto FTP				//select protocol
+acl research_labs src 192.0.2.0/24
+http_access deny research_labs ftp_requests
+
+acl morning_hrs time MTWHF 09:00-12:59 			//acl time
+acl lunch_hrs time D 13:00-13:59						//D : all days
+acl evening_hrs time MTWHF 14:00-18:00
+acl youtube dstdomain .youtube.com
+acl office dstdomain .office.example.com
+http_access allow office
+http_access allow youtube !morning_hours !evening_hours
+http_access deny all
+
+acl example_com_jpg url_regex -i ^http://example.com/.*\.jpg		// all jpg in example.com select & -i : no (lower case & upper case )
+http_access deny example_com_jpg
+
+acl torrent urlpath_regex -i torrent		//select string word  torrwnt
+acl videos urlpath_regex -i \.(avi|mp4|mov|m4v|mkv|flv) (\?.*)?$		//select all format videos
+
+
+acl connections maxconn 25			//per ip connection
+http_access deny connections
+
+acl normal_users src 10.2.0.0/16			
+acl corporate_users src 10.1.0.0/16
+acl norm_conn maxconn 15
+acl corp_conn maxconn 30
+http_access deny normal_users norm_conn
+http_access deny corporate_users corp_conn
+
+acl allowed_clients browser -i firefox msie			//select browser fire fox
+http_access allow allowed_clients					//only fire fox allow
+http_access deny all
+
+acl malicious_website dstdomain .malicious.example.com		//
+acl malicious_referer referer_regex -i malicious.example.com
+http_access deny malicious_website
+http_access deny malicious_referer
+
+acl mpeg_upload req_mime_type -i video/mpeg 
+http_access deny mpeg_upload
+
+acl video_download rep_mime_type -i ^video/ 
+http_reply_access deny video_download
+
+acl user_agent req_header User-Agent -i ^Mozilla 
+http_access allow user_agent 
+http_access deny all
+
+acl random_req random 0.7		//acl ACL_NAME random probability & 70% req motabeghat mide ba rule ha
+
+acl admins src 127.0.0.1 192.0.2.21 192.0.2.86 
+acl snmppublic snmp_community public 
+snmp_access allow snmppublic admins 
+snmp_access deny all
+
+acl max_size_10 src 192.0.2.0/24 
+acl max_size_20 src 198.51.100.0/24 
+reply_body_max_size 10 MB max_size_10		//one file 10 MB    x < = 10 MB
+reply_body_max_size 20 MB max_size_20
+     reply_body_max_size none
+
+acl secret_req src 192.0.2.0/24 
+log_access deny secret_req 		//no any save log from src 192.0.2.0/24
+      log_access allow all
+
+acl working_hours time D 10:00-13:00 
+acl working_hours time D 14:00-18:00 
+http_access allow working_hours localnet work_related 
+http_access allow !working_hours localnet 
+http_access deny all
+
+
+#tail –f /var/log/squid/access.log    				//view log
+
+
 
