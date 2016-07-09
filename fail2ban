@@ -1,1 +1,35 @@
+Fail2ban
+با چک کردن لاگ فایل هایی نظیر var/log/pwdfail/ ، var/log/auth.log/ ، /var/log/secure و … آیپی هایی را که بیش از اندازه معمول عملیات ورود ناموفق داشته اند را با استفاده از دستورات iptables مسدود می کند.
+#yum install fail2ban
+
+	Config file
+# vi /etc/fail2ban/jail.conf
+	Ignoreip : هر آیپی که در این قسمت معرفی شود هیچ گاه بلاک یا مسدود نخواهد شد . شما می توانید لیستی از ایپی ها را با جداکننده space به fail2ban معرفی کنید .
+Bantime : مقدار زمانی که آیپی در iptables بسته یا مسدود خواهد شد . این زمان بر اساس ثانیه است و میزان پیش فرض آن 600 ثانیه معادل 10 دقیقه می باشد و بهتر است بر حسب نیاز این زمان را از یک ساعت (3600) تا یک روز (86400)افزایش دهید.
+Maxretry : مقدار حداکثر تعداد تلاش های ناموفق برای بلاک کردن آیپی
+Findtime : محدودیت زمانی برای وارد شدن به سیستم قبل از بلاک شدن آیپی . اگر در طول این مدت تعداد maxretry تلاش ناموفق روی دهد آیپی بلاک خواهد شد و این زمان هم بر اساس ثانیه است.
+
+Va ghesmate ssh ra manande zir config mikonim
+[ssh-iptables]
+enabled  = true
+filter   = sshd
+action   = iptables[name=SSH, port=ssh, protocol=tcp]
+           sendmail-whois[name=SSH, dest=root, sender=fail2ban@example.com]
+logpath  = /var/log/secure
+maxretry = 3
+
+
+#service fail2ban restart
+
+View ip address block
+#iptables –L
+
+
+
+Unban ip address
+Step 1 = iptables –L –n –line-numbers
+Step 2 = iptables –D fail2ban-SSH 1
+
+
+
 
