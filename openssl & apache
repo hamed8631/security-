@@ -1,1 +1,43 @@
+#openssl req -new -newkey rsa:1024 -keyout (linuxname).key -nodes -out (linuxname).csr		//linuxname.key private key & linuxname.csr certificate signing request
+#openssl req -x509 -days 365 -in (linuxname).csr -key (linuxname).key -out (linuxname).crt		//linuxname.crt certificate
+		OR    ( no need csr )
+#openssl req -x509 -days 365 -newkey rsa:1024 -keyout (linuxname).key -nodes -out (linuxname).crt
+# openssl req -text -noout -in linuxname.csr		// view csr
+# openssl x509 -text -noout -in (linuxname).crt		//cview certificate
+# openssl x509 -in (linuxname).crt -noout -issuer -issuer_hash		//view issuer
+------------------------------------------------------------------------------------------
+#cp linuxname.crt /etc/pki/tls/certs/
+#cp linuxname.key /etc/pki/tls/private/
+#cp linuxname.csr /etc/pki/tls/private/
+
+#restorecon -RvF /etc/pki		//config seelinux
+
+#vi /etc/httpd/conf.d/ssl.conf		// change the paths to match where the Key file is stored
+	SSLCertificateFile /etc/pki/tls/certs/(linuxname).crt
+
+
+#service httpd restart		//restart web server sevice & enable ssl in web server
+------------------------------------------------------------------------------------------
+
+#vi /etc/httpd/conf.d/ssl.conf		//apache config file & add new web site
+
+	<VirtualHost *:443>
+        	SSLEngine on
+	        SSLCertificateFile /etc/pki/tls/certs/ca.crt
+        	SSLCertificateKeyFile /etc/pki/tls/private/ca.key
+	        <Directory /var/www/vhosts/yoursite.com/httpsdocs>
+        	AllowOverride All
+	        </Directory>
+	        DocumentRoot /var/www/vhosts/yoursite.com/httpsdocs
+        	ServerName yoursite.com
+	</VirtualHost>
+
+	------------------------------------------------------------------------------------------
+
+Config firewall
+
+#iptables -A INPUT -p tcp --dport 443 -j ACCEPT
+#service iptables save
+
+
 
