@@ -9,9 +9,40 @@ sshd: 10.12.101.12
 OR
 #rpm –ivh http://pkgs.repoforge.org/denyhosts/denyhosts-2.6-5.el6.rf.noarch.rpm
 
-2-	وارد فایل کانفیگ میشویم و در قسمت Admin_Email ، ایمیل خورمان را وارد میکنیم و threshold  های مورد نظر جهت لاگین های اشتباهی را مشخص میکنیم
-vi /etc/denyhosts/denyhosts.cfg
-3-	سرویس denyhosts را restart میکنیم
+# vi /etc/denyhosts.conf
+OR
+#vi /etc/denyhosts/denyhosts.cfg
+############ DENYHOSTS REQUIRED SETTINGS ############
+SECURE_LOG = /var/log/secure
+HOSTS_DENY = /etc/hosts.deny
+BLOCK_SERVICE  = sshd
+DENY_THRESHOLD_INVALID = 5
+DENY_THRESHOLD_VALID = 10
+DENY_THRESHOLD_ROOT = 1
+DENY_THRESHOLD_RESTRICTED = 1
+WORK_DIR = /var/lib/denyhosts
+SUSPICIOUS_LOGIN_REPORT_ALLOWED_HOSTS=YES
+HOSTNAME_LOOKUP=YES
+LOCK_FILE = /var/lock/subsys/denyhosts
+ 
+############ DENYHOSTS OPTIONAL SETTINGS ############
+ADMIN_EMAIL = hamed_abdolahi@hotmail.com
+SMTP_HOST = localhost
+SMTP_PORT = 25
+SMTP_FROM = DenyHosts <tecmint@tecmint.com>
+SMTP_SUBJECT = DenyHosts Daily Report
+ 
+############ DENYHOSTS OPTIONAL SETTINGS ############
+DAEMON_LOG = /var/log/denyhosts
+DAEMON_SLEEP = 30s
+DAEMON_PURGE = 1h
+
+
+
+
 #service denyhosts restart
-4-	به صورت default بعد از 5 بار لاگین ناموفق IP Attacker بلاک میشود و درون فایل /etc/hosts.deny قرار میگیرد ، چنانچه بخواهیم یک IP را از حالت Block در بیاوریم میبایستی وارد فایل /etc/hosts.deny بشویم و ان IP را از داخل این فایل حذف کنیم و سپس سرویس denyhosts را با دستور service denyhosts restart ری استارت کنیم
+
+به صورت default بعد از 5 بار لاگین ناموفق IP Attacker بلاک میشود و درون فایل /etc/hosts.deny قرار میگیرد 
+، چنانچه بخواهیم یک IP را از حالت Block در بیاوریم میبایستی وارد فایل /etc/hosts.deny بشویم و ان IP را از داخل این فایل 
+حذف کنیم و سپس سرویس denyhosts را با دستور service denyhosts restart ری استارت کنیم
 
